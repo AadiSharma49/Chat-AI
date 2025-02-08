@@ -13,7 +13,7 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showChatList, setShowChatList] = useState(false);
 
-  const API_KEY = "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";
+  const API_KEY = `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`;
 
   useEffect(() => {
     if (activeChat) {
