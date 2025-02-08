@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-// eslint-disable-next-line no-unused-vars
 import React, { useEffect, useRef, useState } from "react";
 import './ChatBotApp.css';
 import Picker from '@emoji-mart/react';
@@ -15,11 +14,6 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
   const [showChatList, setShowChatList] = useState(false);
 
   useEffect(() => {
-    const activeChatObj = chats.find(chat => chat.id === activeChat);
-    setMessages(activeChatObj ? activeChatObj.messages : []);
-  }, [activeChat, chats]);
-
-  useEffect(() => {
     if (activeChat) {
       const storedMessages = JSON.parse(localStorage.getItem(activeChat)) || [];
       setMessages(storedMessages);
@@ -30,9 +24,9 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
     setInputValue(e.target.value);
   };
 
-  function handleEmojiSelect(emoji) {
+  const handleEmojiSelect = (emoji) => {
     setInputValue((prevInput) => prevInput + emoji.native);
-  }
+  };
 
   const sendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -43,23 +37,20 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
       timestamp: new Date().toLocaleTimeString(),
     };
 
+    let updatedMessages = [...messages, newMessage];
+
     if (!activeChat) {
       onNewChat(inputValue);
-      setInputValue("");
     } else {
-      const updatedMessages = [...messages, newMessage];
       setMessages(updatedMessages);
       localStorage.setItem(activeChat, JSON.stringify(updatedMessages));
-      setInputValue("");
 
-      const updatedChats = chats.map((chat) => {
-        if (chat.id === activeChat) {
-          return { ...chat, messages: updatedMessages };
-        }
-        return chat;
-      });
+      const updatedChats = chats.map((chat) =>
+        chat.id === activeChat ? { ...chat, messages: updatedMessages } : chat
+      );
       setChats(updatedChats);
       localStorage.setItem("chats", JSON.stringify(updatedChats));
+      setInputValue("");
       setIsTyping(true);
 
       try {
@@ -67,7 +58,7 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization:`Bearer sk-7b26c7c1ab04460b889d2381d429b8be`,
+            Authorization: `Bearer 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`, // Use environment variable
           },
           body: JSON.stringify({
             model: "gpt-3.5-turbo",
@@ -76,30 +67,33 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
           }),
         });
 
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} - ${response.statusText}`);
+        }
+
         const data = await response.json();
 
-        const ChatResponse = data.choices[0].message.content.trim();
-        const newResponse = {
-          type: "response",
-          text: ChatResponse,
-          timestamp: new Date().toLocaleTimeString(),
-        };
+        if (data.choices && data.choices.length > 0) {
+          const ChatResponse = data.choices[0].message.content.trim();
+          const newResponse = {
+            type: "response",
+            text: ChatResponse,
+            timestamp: new Date().toLocaleTimeString(),
+          };
 
-        const updatedMessagesWithResponse = [...updatedMessages, newResponse];
-        setMessages(updatedMessagesWithResponse);
-        localStorage.setItem(activeChat, JSON.stringify(updatedMessagesWithResponse));
-        setIsTyping(false);
+          updatedMessages = [...updatedMessages, newResponse];
+          setMessages(updatedMessages);
+          localStorage.setItem(activeChat, JSON.stringify(updatedMessages));
 
-        const updatedChatsWithResponse = chats.map((chat) => {
-          if (chat.id === activeChat) {
-            return { ...chat, messages: updatedMessagesWithResponse };
-          }
-          return chat;
-        });
-        setChats(updatedChatsWithResponse);
-        localStorage.setItem("chats", JSON.stringify(updatedChatsWithResponse));
+          const updatedChatsWithResponse = chats.map((chat) =>
+            chat.id === activeChat ? { ...chat, messages: updatedMessages } : chat
+          );
+          setChats(updatedChatsWithResponse);
+          localStorage.setItem("chats", JSON.stringify(updatedChatsWithResponse));
+        }
       } catch (error) {
         console.error("Error sending message:", error);
+      } finally {
         setIsTyping(false);
       }
     }
@@ -123,8 +117,7 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
     localStorage.removeItem(id);
 
     if (id === activeChat) {
-      const newActiveChat = updatedChats.length > 0 ? updatedChats[0].id : null;
-      setActiveChat(newActiveChat);
+      setActiveChat(updatedChats.length > 0 ? updatedChats[0].id : null);
     }
   };
 
@@ -137,7 +130,7 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
       <div className={`chat-list ${showChatList ? 'show' : ""}`}>
         <div className="chat-list-header">
           <h2>Chat List</h2>
-          <i className="bx bx-edit-alt new-chat" onClick={() => onNewChat()}></i>
+          <i className="bx bx-edit-alt new-chat" onClick={onNewChat}></i>
           <i className="bx bx-x-circle close-list" onClick={() => setShowChatList(false)}></i>
         </div>
         {chats.map((chat) => (
