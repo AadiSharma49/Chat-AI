@@ -67,7 +67,7 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization:`Bearer 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`,
+            Authorization:`Bearer sk-7b26c7c1ab04460b889d2381d429b8be`,
           },
           body: JSON.stringify({
             model: "gpt-3.5-turbo",
