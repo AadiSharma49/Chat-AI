@@ -13,6 +13,8 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showChatList, setShowChatList] = useState(false);
 
+  const API_KEY = "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";
+
   useEffect(() => {
     if (activeChat) {
       const storedMessages = JSON.parse(localStorage.getItem(activeChat)) || [];
@@ -58,7 +60,7 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer sk-5af5fa9f7177471a916ee43684061730`, // Use environment variable
+            "Authorization": `Bearer ${API_KEY}`,
           },
           body: JSON.stringify({
             model: "gpt-3.5-turbo",
@@ -68,7 +70,8 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
         });
 
         if (!response.ok) {
-          throw new Error(`Error: ${response.status} - ${response.statusText}`);
+          const errorText = await response.text();
+          throw new Error(`API Error ${response.status}: ${errorText}`);
         }
 
         const data = await response.json();
@@ -93,6 +96,7 @@ function ChatBotApp({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
         }
       } catch (error) {
         console.error("Error sending message:", error);
+        alert(`Error: ${error.message}`);
       } finally {
         setIsTyping(false);
       }
